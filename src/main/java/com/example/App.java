@@ -2,55 +2,58 @@ package com.example;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
 import java.time.Duration;
 
 public class App {
+
     public static void main(String[] args) {
 
-        // Set ChromeDriver path (if not using WebDriverManager)
-        // System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
+        ChromeOptions options = new ChromeOptions();
 
-        WebDriver driver = new ChromeDriver();
+        // Required for Jenkins (headless Linux)
+        options.addArguments("--headless=new");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-allow-origins=*");
 
-        // Explicit wait
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebDriver driver = new ChromeDriver(options);
+
+        driver.get("https://automationexercise.com");
+
+        driver.manage().window().maximize();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         try {
-            // Open website
-            driver.get("https://automationexercise.com/login");
-            driver.manage().window().maximize();
-
-            // Wait for email field and enter email
-            WebElement email = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(By.name("email"))
+            // Wait until "Add to cart" is clickable
+            WebElement addToCart = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    By.xpath("(//a[contains(text(),'Add to cart')])[1]")
+                )
             );
-            email.sendKeys("testuser123@gmail.com");  // Use valid registered email
 
-            // Enter password
-            WebElement password = driver.findElement(By.name("password"));
-            password.sendKeys("test123");  // Use correct password
+            addToCart.click();
 
-            // Click login button
-            WebElement loginBtn = driver.findElement(
-                By.xpath("//button[@data-qa='login-button']")
+            // Wait for Continue Shopping button
+            WebElement continueBtn = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    By.xpath("//button[contains(text(),'Continue Shopping')]")
+                )
             );
-            loginBtn.click();
 
-            // Validate login success (optional)
-            wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//a[contains(text(),'Logged in as')]")
-            ));
+            continueBtn.click();
 
-            System.out.println("Login successful!");
+            System.out.println("First item added to cart successfully");
 
         } catch (Exception e) {
-            System.out.println("Error occurred: " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            // Close browser
             driver.quit();
         }
     }
